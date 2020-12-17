@@ -3,6 +3,9 @@ kind: Deployment
 metadata:
   name: jenkins-demo
 spec:
+  selector:
+    matchLabels:
+      app: jenkins-demo
   template:
     metadata:
       labels:
