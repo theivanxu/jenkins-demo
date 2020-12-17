@@ -1,4 +1,3 @@
-@Library('github.com/releaseworks/jenkinslib') _
 node("haimaxy-jnlp") {
     stage("Clone") {
         echo "1. Clone Stage"
@@ -16,12 +15,11 @@ node("haimaxy-jnlp") {
     }
     stage("Push") {
         echo "4. Push Docker Image Stage"
-        withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'aws-key', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY']]) {
-            aws_password = AWS("--region=us-west-2 ecr get-login-password")
+        withAWS(credentials:'aws-key') {
+            def ecr_login = ecrLogin()
+            sh ecr_login
+            sh "docker push 011383927026.dkr.ecr.us-west-2.amazonaws.com/jenkins-demo:${build_tag}"
         }
-        echo "aws password: ${aws_password}"
-        sh "docker login --username AWS --password ${aws_password} 011383927026.dkr.ecr.us-west-2.amazonaws.com"
-        sh "docker push 011383927026.dkr.ecr.us-west-2.amazonaws.com/jenkins-demo:${build_tag}"
     }
     stage("Deploy") {
         echo "5. Deploy Stage"
@@ -36,13 +34,14 @@ node("haimaxy-jnlp") {
                 ]
             ]
         )
-        echo "This is a deploy step to ${userInput.Env}"
+        echo "UserInput: ${userInput}"
+        echo "This is a deploy step to ${userInput}"
         sh "sed -i 's/<BUILD_TAG>/${build_tag}/' k8s.yaml"
-        if (userInput.Env == "DEV") {
+        if (userInput == "DEV") {
             echo "Deploy to dev environment"
-        } else if (userInput.Env == "QA") {
+        } else if (userInput == "QA") {
             echo "Deploy to qa environment"
-        } else if (userInput.Env == "PROD") {
+        } else if (userInput == "PROD") {
             echo "Deploy to prod environment"
         } else {
             echo "No choose"
