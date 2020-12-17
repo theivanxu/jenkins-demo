@@ -4,7 +4,7 @@ node("haimaxy-jnlp") {
         echo "1. Clone Stage"
         git url: "https://github.com/theivanxu/jenkins-demo.git"
         script {
-            build_tag = sh(returnStdout: true, script: 'git rev-pars --short HEAD').trim()
+            build_tag = sh(returnStdout: true, script: 'git rev-parse --short HEAD').trim()
         }
     }
     stage("Test") {
@@ -40,9 +40,9 @@ node("haimaxy-jnlp") {
         sh "sed -i 's/<BUILD_TAG>/${build_tag}/' k8s.yaml"
         if (userInput.Env == "DEV") {
             echo "Deploy to dev environment"
-        } else (userInput.Env == "QA") {
+        } else if (userInput.Env == "QA") {
             echo "Deploy to qa environment"
-        } else (userInput.Env == "PROD") {
+        } else if (userInput.Env == "PROD") {
             echo "Deploy to prod environment"
         } else {
             echo "No choose"
